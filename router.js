@@ -1,16 +1,18 @@
-const express = require('express')
-const util = require('./util')
-const authorize = require('./middleware/authorize')
-const system = require('./controllers/SystemController.js')
-const authen = require('./controllers/LoginController.js')
-const userAccount = require('./controllers/UserAccountController.js')
-const product = require('./controllers/ProductController.js')
-const brand = require('./controllers/BrandController.js')
-const orderHeader = require('./controllers/OrderHeaderController.js')
-const orderDetail = require('./controllers/OrderDetailController.js')
+const express = require('express');
+const util = require('./util');
+const authorize = require('./middleware/authorize');
+const system = require('./controllers/SystemController.js');
+const authen = require('./controllers/LoginController.js');
+const userAccount = require('./controllers/UserAccountController.js');
+const product = require('./controllers/ProductController.js');
+const brand = require('./controllers/BrandController.js');
+const orderHeader = require('./controllers/OrderHeaderController.js');
+const orderDetail = require('./controllers/OrderDetailController.js');
 const hosxp = require('./controllers/HosxpController.js');
 
-module.exports = express.Router()
+const router = express.Router();
+
+router
   .post('/login', authen.login)
   .get('/logout', authen.logout)
   .post('/resetPassword', authen.resetPassword)
@@ -19,7 +21,9 @@ module.exports = express.Router()
   .get('/user', authen.user)
   .get('/profile', system.profile)
   .post('/updateProfile', system.updateProfile)
-  .get('/stack', system.stack)
+  .get('/stack', system.stack);
+
+router
   .use('/userAccounts', authorize('ADMIN'), express.Router()
     .get('/', userAccount.index)
     .post('/', userAccount.create)
@@ -29,7 +33,9 @@ module.exports = express.Router()
     .put('/:id', userAccount.update)
     .get('/:id/delete', userAccount.getDelete)
     .delete('/:id', userAccount.delete)
-  )
+  );
+
+router
   .use('/products', authorize('ADMIN,USER'), express.Router()
     .get('/', product.index)
     .post('/', util.getFile('products', 'image'), product.create)
@@ -39,7 +45,9 @@ module.exports = express.Router()
     .put('/:id', util.getFile('products', 'image'), product.update)
     .get('/:id/delete', product.getDelete)
     .delete('/:id', product.delete)
-  )
+  );
+
+router
   .use('/brands', authorize('ADMIN,USER'), express.Router()
     .get('/', brand.index)
     .post('/', brand.create)
@@ -49,7 +57,9 @@ module.exports = express.Router()
     .put('/:id', brand.update)
     .get('/:id/delete', brand.getDelete)
     .delete('/:id', brand.delete)
-  )
+  );
+
+router
   .use('/orderHeaders', authorize('ADMIN,USER'), express.Router()
     .get('/', orderHeader.index)
     .post('/', orderHeader.create)
@@ -59,7 +69,9 @@ module.exports = express.Router()
     .put('/:id', orderHeader.update)
     .get('/:id/delete', orderHeader.getDelete)
     .delete('/:id', orderHeader.delete)
-  )
+  );
+
+router
   .use('/orderDetails', authorize('ADMIN,USER'), express.Router()
     .post('/', orderDetail.create)
     .get('/create', orderDetail.getCreate)
@@ -67,7 +79,12 @@ module.exports = express.Router()
     .put('/:orderId/:no', orderDetail.update)
     .get('/:orderId/:no/delete', orderDetail.getDelete)
     .delete('/:orderId/:no', orderDetail.delete)
-  )
+  );
+
+router
   .use('/hosxp', authorize('ADMIN,USER'), express.Router()
-    .get('/',hosxp.index)
-  )
+    .get('/', hosxp.index)
+    .get('/population-data', hosxp.getPopulationData) // Added new endpoint
+  );
+
+module.exports = router;

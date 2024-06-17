@@ -161,5 +161,8 @@ module.exports = {
       return value && this.formatDateTime(value)
     }
     return next()
+  },
+  calculateAge(birthdate) {
+    return moment().diff(moment(birthdate), 'years');
   }
 }
