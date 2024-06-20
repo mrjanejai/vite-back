@@ -36,7 +36,7 @@ router
   );
 
 router
-  .use('/products', authorize('ADMIN,USER'), express.Router()
+  .use('/products', authorize('ADMIN'), express.Router()
     .get('/', product.index)
     .post('/', util.getFile('products', 'image'), product.create)
     .get('/create', product.getCreate)
@@ -48,7 +48,7 @@ router
   );
 
 router
-  .use('/brands', authorize('ADMIN,USER'), express.Router()
+  .use('/brands', authorize('ADMIN'), express.Router()
     .get('/', brand.index)
     .post('/', brand.create)
     .get('/create', brand.getCreate)
@@ -60,7 +60,7 @@ router
   );
 
 router
-  .use('/orderHeaders', authorize('ADMIN,USER'), express.Router()
+  .use('/orderHeaders', authorize('ADMIN'), express.Router()
     .get('/', orderHeader.index)
     .post('/', orderHeader.create)
     .get('/create', orderHeader.getCreate)
@@ -72,7 +72,7 @@ router
   );
 
 router
-  .use('/orderDetails', authorize('ADMIN,USER'), express.Router()
+  .use('/orderDetails', authorize('ADMIN'), express.Router()
     .post('/', orderDetail.create)
     .get('/create', orderDetail.getCreate)
     .get('/:orderId/:no/edit', orderDetail.edit)
@@ -82,9 +82,8 @@ router
   );
 
 router
-  .use('/hosxp', authorize('ADMIN,USER'), express.Router()
+  .use('/hosxp', authorize('ADMIN'), express.Router()
     .get('/', hosxp.index)
     .get('/population-data', hosxp.getPopulationData) // Added new endpoint
   );
-
 module.exports = router;

@@ -162,7 +162,7 @@ module.exports = {
     }
     return next()
   },
-  calculateAge(birthdate) {
-    return moment().diff(moment(birthdate), 'years');
+  calculateAge(birthday) {
+    return moment().diff(moment(birthday), 'years');
   }
 }
