@@ -1,82 +1,155 @@
-const knex = require('../dbhos');
+const { knex2, db2 } = require('../dbhos');
 const util = require('../util');
 
 exports.index = (req, res) => {
   res.send('Hosxp index route');
 };
 
-exports.getPopulationData = async (req, res, next) => {
-  try {
-    const result = await knex('patient as p')
-  .select(
-    'p.birthday',
-    'p.sex',
-    'n.nationality',
-    knex.raw(`
-      CASE
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702022','5702023','5702026','57020212','57020216') THEN 'รพ.สมเด็จพระญาณสังวร'
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702024','5702025','5702027','57020211','57020215','57020217','57020218','57020220') THEN 'รพ.สต.ด้ายกู่แก้ว'
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702021','5702028','5702029','57020210','57020213','57020214','57020219') THEN 'รพ.สต.เวียงชัย'
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702031','5702034','5702035','5702036','5702038','5702039','57020311','57020312','57020314') THEN 'รพ.สต.ผางาม'
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702032','5702033','5702037','57020310','57020313','57020315') THEN 'รพ.สต.ดงมะตื๋น'
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702041','5702042','5702043','5702044','5702045','5702046','5702047','5702048','5702049','57020410','57020411','57020412') THEN 'รพ.สต.เวียงเหนือ'
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702061','5702062','5702063','5702064','5702065','57020611','57020612','57020614') THEN 'รพ.สต.ช่องลม'
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702066','5702067','5702068','5702069','57020610','57020613','57020615','57020616','57020617') THEN 'รพ.สต.ดอนศิลา'
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702081','5702082','5702083','5702084','57020811') THEN 'รพ.สต.ดอนแก้ว'
-        WHEN CONCAT(p.chwpart, p.amppart, p.tmbpart, p.moopart) IN ('5702085','5702086','5702087','5702088','5702089','57020810') THEN 'รพ.สต.เมืองชุม'
-        ELSE 'นอกเขต'
-      END as area_type
-    `)
-  )
-  .leftJoin('nationality as n', 'n.nationality', 'p.nationality')
-  .leftJoin('thaiaddress as t1', function() {
-    this.on('t1.chwpart', 'p.chwpart').andOn('t1.codetype', knex.raw('?', ['1']));
-  })
-  .leftJoin('thaiaddress as t2', function() {
-    this.on('t2.chwpart', 'p.chwpart').andOn('t2.amppart', 'p.amppart').andOn('t2.codetype', knex.raw('?', ['2']));
-  })
-  .leftJoin('thaiaddress as t3', function() {
-    this.on('t3.chwpart', 'p.chwpart').andOn('t3.amppart', 'p.amppart').andOn('t3.tmbpart', 'p.tmbpart');
-  })
-  .where('p.death', '<>', 'Y');
+exports.getPopulationSex = (req, res, next) => {
+  let sqlPopulationSex = knex2('person as ps')
+    .select('ps.birthdate', 'ps.sex')
+    .where('ps.death', '<>', 'Y')
+    .whereIn('ps.house_regist_type_id', [1, 3])
+    .toString();
 
-    const populationData = {
-      male: new Array(21).fill(0),
-      female: new Array(21).fill(0),
-      nation_thai: new Array(21).fill(0),
-      nation_other: new Array(21).fill(0),
-      area_in: new Array(21).fill(0),
-      area_out: new Array(21).fill(0),
-    };
+  db2.query(sqlPopulationSex, { type: db2.QueryTypes.SELECT })
+    .then(result => {
+      const populationData = {
+        male: new Array(21).fill(0),
+        female: new Array(21).fill(0)
+      };
+
+      result.forEach(row => {
+        const birthdate = row.birthdate;
+        const age = util.calculateAge(birthdate);
+        const ageGroup = Math.min(Math.floor(age / 5), 20);
+        const sex = parseInt(row.sex, 10);
+
+        if (sex === 1) {
+          populationData.male[ageGroup]++;
+        } else if (sex === 2) {
+          populationData.female[ageGroup]++;
+        }
+      });
+
+      res.json(populationData);
+    })
+    .catch(next);
+};
+
+exports.getPopulationNationality = (req, res, next) => {
+  let sqlPopulationNationality = knex2('person as ps')
+    .select('ps.birthdate', 'n.nationality')
+    .leftJoin('nationality as n', 'n.nationality', 'ps.nationality')
+    .where('ps.death', '<>', 'Y')
+    .whereIn('ps.house_regist_type_id', [1, 3])
+    .toString();
+
+  db2.query(sqlPopulationNationality, { type: db2.QueryTypes.SELECT })
+    .then(result => {
+      const populationData = {
+        thai: new Array(21).fill(0),
+        other: new Array(21).fill(0)
+      };
+
+      result.forEach(row => {
+        const birthdate = row.birthdate;
+        const age = util.calculateAge(birthdate);
+        const ageGroup = Math.min(Math.floor(age / 5), 20);
+        const nationality = parseInt(row.nationality, 10);
+
+        if (nationality === 99) {
+          populationData.thai[ageGroup]++;
+        } else {
+          populationData.other[ageGroup]++;
+        }
+      });
+
+      res.json(populationData);
+    })
+    .catch(next);
+};
+
+exports.getPopulationStatus = (req, res, next) => {
+  let sqlPopulationStatus = knex2('person as ps')
+    .select('ps.birthdate', 'm.code as marrystatus')
+    .leftJoin('marrystatus as m', 'm.code', 'ps.marrystatus')
+    .where('ps.death', '<>', 'Y')
+    .whereIn('ps.house_regist_type_id', [1, 3])
+    .toString();
+
+  db2.query(sqlPopulationStatus, { type: db2.QueryTypes.SELECT })
+    .then(result => {
+      const populationData = {
+        single: new Array(21).fill(0),
+        married: new Array(21).fill(0),
+        widow: new Array(21).fill(0),
+        divorced: new Array(21).fill(0),
+        separated: new Array(21).fill(0),
+        monk: new Array(21).fill(0),
+        unknown: new Array(21).fill(0)
+      };
+
+      result.forEach(row => {
+        const birthdate = row.birthdate;
+        const age = util.calculateAge(birthdate);
+        const ageGroup = Math.min(Math.floor(age / 5), 20);
+        const status = parseInt(row.marrystatus, 10);
+
+        switch (status) {
+          case 1:
+            populationData.single[ageGroup]++;
+            break;
+          case 2:
+            populationData.married[ageGroup]++;
+            break;
+          case 3:
+            populationData.widow[ageGroup]++;
+            break;
+          case 4:
+            populationData.divorced[ageGroup]++;
+            break;
+          case 5:
+            populationData.separated[ageGroup]++;
+            break;
+          case 6:
+            populationData.monk[ageGroup]++;
+            break;
+          case 9:
+          default:
+            populationData.unknown[ageGroup]++;
+            break;
+        }
+      });
+
+      res.json(populationData);
+    })
+    .catch(next);
+};
+
+exports.getPopulationOcc = async (req, res, next) => {
+  try {
+    // สร้างคำสั่ง SQL ด้วย Knex และแปลงเป็นสตริง
+    const sql = knex2('patient as p')
+      .select('oc.name as occupation', 'p.sex')
+      .leftJoin('occupation as oc', 'oc.occupation', 'p.occupation')
+      .where('p.death', '<>', 'Y')
+      .toString();
+
+    // รันคำสั่ง SQL ด้วย db2.query
+    const result = await db2.query(sql, { type: db2.QueryTypes.SELECT });
+
+    const populationData = {};
 
     result.forEach(row => {
-      const birthdate = row.birthday; // ตรวจสอบว่า row.birthday เป็น object ของ Date หรือไม่
-      const age = util.calculateAge(birthdate);
-      const ageGroup = Math.min(Math.floor(age / 5), 20);
-      const nationGroup = Math.min(Math.floor(age / 5), 20);
-      const areaGroup = Math.min(Math.floor(age / 5), 20);
-      const sex = parseInt(row.sex, 10); // แปลงค่า sex เป็นตัวเลข
-      const nationality = parseInt(row.nationality, 10); // แปลงค่า nationality เป็นตัวเลข
-
-      if (sex === 1) {
-        populationData.male[ageGroup]++;
-      } else if (sex === 2) {
-        populationData.female[ageGroup]++;
+      if (!populationData[row.occupation]) {
+        populationData[row.occupation] = { male: 0, female: 0 };
       }
-
-      if(nationality===99){
-        populationData.nation_thai[nationGroup]++;
-      }else{
-        populationData.nation_other[nationGroup]++;
+      if (row.sex === '1') {
+        populationData[row.occupation].male++;
+      } else if (row.sex === '2') {
+        populationData[row.occupation].female++;
       }
-
-      if(row.area_type==='นอกเขต'){
-        populationData.area_out[areaGroup]++;
-      }else{
-          populationData.area_in[areaGroup]++;
-        }
-
-
     });
 
     res.json(populationData);
@@ -84,4 +157,3 @@ exports.getPopulationData = async (req, res, next) => {
     next(err);
   }
 };
-

@@ -37,16 +37,16 @@ module.exports = {
       roles: 'ADMIN,USER', 
       show: true,
       subMenu: [
-        { title: 'เมนูย่อย 1', path: 'patient/subMenu1', roles: 'ADMIN,USER', show: true },
-        { title: 'เมนูย่อย 2', path: 'patient/subMenu2', roles: 'ADMIN,USER', show: true },
-        { title: 'เมนูย่อย 3', path: 'patient/subMenu3', roles: 'ADMIN,USER', show: true },
-        { title: 'เมนูย่อย 4', path: 'patient/subMenu4', roles: 'ADMIN,USER', show: true },
-        { title: 'เมนูย่อย 5', path: 'patient/subMenu5', roles: 'ADMIN,USER', show: true },
-        { title: 'เมนูย่อย 6', path: 'patient/subMenu6', roles: 'ADMIN,USER', show: true },
-        { title: 'เมนูย่อย 7', path: 'patient/subMenu7', roles: 'ADMIN,USER', show: true },
-        { title: 'เมนูย่อย 8', path: 'patient/subMenu8', roles: 'ADMIN,USER', show: true },
-        { title: 'เมนูย่อย 9', path: 'patient/subMenu9', roles: 'ADMIN,USER', show: true },
-        { title: 'เมนูย่อย 10', path: 'patient/subMenu10', roles: 'ADMIN,USER', show: true }
+        { subtitle: 'เมนูย่อย 1', subpath: 'patient/subMenu1', roles: 'ADMIN,USER', show: true },
+        { subtitle: 'เมนูย่อย 2', subpath: 'patient/subMenu2', roles: 'ADMIN,USER', show: true },
+        { subtitle: 'เมนูย่อย 3', subpath: 'patient/subMenu3', roles: 'ADMIN,USER', show: true },
+        { subtitle: 'เมนูย่อย 4', subpath: 'patient/subMenu4', roles: 'ADMIN,USER', show: true },
+        { subtitle: 'เมนูย่อย 5', subpath: 'patient/subMenu5', roles: 'ADMIN,USER', show: true },
+        { subtitle: 'เมนูย่อย 6', subpath: 'patient/subMenu6', roles: 'ADMIN,USER', show: true },
+        { subtitle: 'เมนูย่อย 7', subpath: 'patient/subMenu7', roles: 'ADMIN,USER', show: true },
+        { subtitle: 'เมนูย่อย 8', subpath: 'patient/subMenu8', roles: 'ADMIN,USER', show: true },
+        { subtitle: 'เมนูย่อย 9', subpath: 'patient/subMenu9', roles: 'ADMIN,USER', show: true },
+        { subtitle: 'เมนูย่อย 10', subpath: 'patient/subMenu10', roles: 'ADMIN,USER', show: true }
       ]
     },
     { title: 'กิจกรรมการพยาบาล', path: 'patientActivity', roles: 'ADMIN,USER', show: true },
@@ -57,7 +57,7 @@ module.exports = {
     { title: 'Order', path: 'orderHeader', roles: 'ADMIN', show: true },
     { title: 'Product', path: 'product', roles: 'ADMIN', show: true },
     { title: 'User Account', path: 'userAccount', roles: 'ADMIN', show: true },
-    { title: 'HOSXP', path: 'hosxp', roles: 'ADMIN', show: true }
+    { title: 'HOSXP', path: 'hosxp', roles: 'ADMIN,USER', show: true }
   ],
   jwtSecret: '@SDPY@15012@MIS@2024'
 }

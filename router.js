@@ -9,6 +9,7 @@ const brand = require('./controllers/BrandController.js');
 const orderHeader = require('./controllers/OrderHeaderController.js');
 const orderDetail = require('./controllers/OrderDetailController.js');
 const hosxp = require('./controllers/HosxpController.js');
+const patient = require('./controllers/PatientController.js');
 
 const router = express.Router();
 
@@ -82,8 +83,17 @@ router
   );
 
 router
-  .use('/hosxp', authorize('ADMIN'), express.Router()
+  .use('/hosxp', authorize('ADMIN','USER'), express.Router()
     .get('/', hosxp.index)
     .get('/population-data', hosxp.getPopulationData) // Added new endpoint
+  );
+
+  router
+  .use('/patient', authorize('ADMIN','USER'), express.Router()
+    .get('/', patient.index)
+    .get('/population-sex', patient.getPopulationSex) // Added new endpoint
+    .get('/population-nat', patient.getPopulationNationality) // Added new endpoint
+    .get('/population-status', patient.getPopulationStatus) // Added new endpoint
+    .get('/population-occ', patient.getPopulationOcc) // Added new endpoint
   );
 module.exports = router;

@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt')
+const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 const { knex, db } = require('../db')
+const { knex2, db2 } = require('../dbhos')
 const { jwtSecret, menu } = require('../config.js')
 const util = require('../util')
 const User = require('../models/UserAccount')
@@ -15,10 +17,13 @@ async function getUserRoles(userId) {
 }
 
 function getMenu(roles) {
-  return menu.filter(e => e.show && (!e.roles || e.roles.split(',').some(role => roles.includes(role)))).map((e) => ({
-    title: e.title,
-    path: e.path
-  }))
+  return menu
+    .filter(e => e.show && (!e.roles || e.roles.split(',').some(role => roles.includes(role))))
+    .map(e => ({
+      title: e.title,
+      path: e.path,
+      subMenu: e.subMenu ? e.subMenu.filter(sub => sub.show && (!sub.roles || sub.roles.split(',').some(role => roles.includes(role)))) : []
+    }));
 }
 
 exports.user = (req, res) => {
@@ -28,22 +33,56 @@ exports.user = (req, res) => {
   })
 }
 
+// ------------------- LOGIN -------------------
 exports.login = async (req, res, next) => {
-  let user = await User.findOne({ where: { name: req.body.name }})
-  if (user && user.active && bcrypt.compareSync(req.body.password, user.password)) {
-    let roles = await getUserRoles(user.id)
-    let token = jwt.sign({ id: user.id, name: user.name, roles }, jwtSecret, { expiresIn: '1d' })
-    return res.send({
-      token,
-      user: {
-        name: user.name,
-        menu: getMenu(roles)
-      }
-    })
+  const { name, password, hosxp } = req.body;
+  if (!name || !password) {
+    return res.status(400).send({ message: 'Name and password are required' });
   }
-  let message = (user && !user.active ? 'User is disabled' : 'Invalid credentials')
-  res.status(400).send({ message })
+
+  let user = null; // Ensure user is defined
+
+  if (hosxp) {
+    // Check user in dbhos
+    let sql = knex2('officer')
+      .where('officer_login_name', name)
+      .select('officer_login_password_md5 as password')
+      .toString();
+    let officer = await db2.query(sql, { type: db2.QueryTypes.SELECT }); // Use db2.QueryTypes.SELECT+
+
+    if (officer.length && crypto.createHash('md5').update(password).digest('hex').toUpperCase() === officer[0].password) {
+      // Assign role id 102 for hosxp users
+      let roles = await getUserRoles(102);
+      let token = jwt.sign({ id: 102, name, roles }, jwtSecret, { expiresIn: '1d' });
+      return res.send({
+        token,
+        user: {
+          name,
+          menu: getMenu(roles),
+          phosxp: hosxp
+        }
+      });
+    }
+  } else {
+    // Check user in regular database
+    user = await User.findOne({ where: { name } });
+    if (user && user.active && bcrypt.compareSync(password, user.password)) {
+      let roles = await getUserRoles(user.id);
+      let token = jwt.sign({ id: user.id, name: user.name, roles }, jwtSecret, { expiresIn: '1d' });
+      return res.send({
+        token,
+        user: {
+          name: user.name,
+          menu: getMenu(roles),
+          phosxp: hosxp
+        }
+      });
+    }
+  }
+  let message = (user && !user.active ? 'User is disabled' : 'Invalid credentials');
+  res.status(400).send({ message });
 }
+// ------------------- LOGIN -------------------
 
 exports.logout = (req, res, next) => {
   res.end()
