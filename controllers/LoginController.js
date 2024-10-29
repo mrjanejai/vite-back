@@ -46,14 +46,14 @@ exports.login = async (req, res, next) => {
     // Check user in dbhos
     let sql = knex2('officer')
       .where('officer_login_name', name)
-      .select('officer_login_password_md5 as password')
+      .select('officer_id as o_id,officer_name as o_name,officer_login_password_md5 as password')
       .toString();
     let officer = await db2.query(sql, { type: db2.QueryTypes.SELECT }); // Use db2.QueryTypes.SELECT+
-
+    
     if (officer.length && crypto.createHash('md5').update(password).digest('hex').toUpperCase() === officer[0].password) {
       // Assign role id 102 for hosxp users
-      let roles = await getUserRoles(102);
-      let token = jwt.sign({ id: 102, name, roles }, jwtSecret, { expiresIn: '1d' });
+      let roles = await getUserRoles(officer[0].o_id);
+      let token = jwt.sign({ id: officer[0].o_id, name: name, roles }, jwtSecret, { expiresIn: '1d' });
       return res.send({
         token,
         user: {

@@ -10,6 +10,7 @@ const orderHeader = require('./controllers/OrderHeaderController.js');
 const orderDetail = require('./controllers/OrderDetailController.js');
 const hosxp = require('./controllers/HosxpController.js');
 const patient = require('./controllers/PatientController.js');
+const hosxpOfficer = require('./controllers/HosxpOfficerController.js');
 
 const router = express.Router();
 
@@ -34,6 +35,13 @@ router
     .put('/:id', userAccount.update)
     .get('/:id/delete', userAccount.getDelete)
     .delete('/:id', userAccount.delete)
+);
+  
+router
+  .use('/hosxpOfficer', authorize('ADMIN'), express.Router()
+    .get('/', hosxpOfficer.index)
+    .get('/:id', hosxpOfficer.get)
+    .get('/:id/edit',hosxpOfficer.edit)
   );
 
 router
