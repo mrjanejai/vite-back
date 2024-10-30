@@ -1,6 +1,8 @@
 const { knex, db } = require('../db');      // สำหรับการเชื่อมต่อ db.js
 const { knex2, db2 } = require('../dbhos'); // สำหรับการเชื่อมต่อ dbhos.js
+const util = require('../util')
 const UserRole = require('../models/UserRole'); // โมเดล UserRole
+const Role = require('../models/Role') // Model สำหรับตาราง Role
 
 exports.index = async (req, res, next) => {
   try {
@@ -11,11 +13,14 @@ exports.index = async (req, res, next) => {
     const column = req.query.sc;
     let query = knex2('officer')
       .select('officer_id', 'officer_login_name', 'officer_name', 'officer_login_password_md5')
+      .where('officer_active','Y')
       .orderBy(sort, sortDirection);
+    console.log('im index');
 
     // ตรวจสอบว่า column ที่ใช้ในการค้นหาถูกต้องหรือไม่
     const columns = query._statements.find(e => e.grouping === 'columns').value;
     if (util.isInvalidSearch(columns, column)) {
+      console.log('im in column');
       return res.sendStatus(403);
     }
 
@@ -26,12 +31,14 @@ exports.index = async (req, res, next) => {
       if (operator === 'like') {
         search = `%${search}%`;
       }
+      console.log(query.where(column, operator, search));
       query.where(column, operator, search);
     }
 
     // สร้าง SQL สำหรับนับจำนวนทั้งหมดและดึงข้อมูลตามหน้า
     const sqlCount = query.clone().clearSelect().clearOrder().count('* as "count"').toString();
     const sqlQuery = query.offset((page - 1) * size).limit(size).toString();
+
 
     // รันทั้งสองคำสั่ง SQL โดยใช้ Promise.all
     const [countResult, officers] = await Promise.all([
@@ -52,79 +59,61 @@ exports.index = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 }
 
-// ฟังก์ชัน get เพื่อดึงข้อมูลของ officer พร้อม role
-exports.get = async (req, res, next) => {
-  try {
-    // ดึงข้อมูล officer จาก dbhos ตาม officer_id
-    const officerSql = knex2('officer')
-      .select('officer_id', 'officer_login_name', 'officer_name')
-      .where('officer_id', req.params.id)
-      .toString();
+exports.get = (req, res, next) => {
+  console.log('get get get');
+  // สร้าง SQL query เพื่อดึงข้อมูล officer จาก dbhos
+  let sqlOfficer = knex2('officer')
+    .select('officer.officer_id', 'officer.officer_name', 'officer.officer_login_name')
+    .where('officer.officer_id', req.params.id)
+    .toString();
 
-    const officer = await db2.query(officerSql, { type: db2.QueryTypes.SELECT, plain: true });
+  // สร้าง SQL query เพื่อดึงข้อมูล role ของ officer จาก db หลัก
+  let sqlOfficerUserRole = knex('UserRole')
+    .join('Role', 'UserRole.role_id', 'Role.id')
+    .select('Role.id as role_id', 'Role.name as role_name')
+    .where('UserRole.user_id', req.params.id) // ใช้ officer_id เป็น user_id ในกรณีนี้
+    .toString();
 
-    if (!officer) {
-      return res.status(404).send({ message: 'Officer not found' });
-    }
+  // สร้าง SQL query เพื่อดึงรายการ roles ทั้งหมด
+  let sqlRoles = knex('Role')
+    .select('Role.id', 'Role.name')
+    .toString();
 
-    // ดึงข้อมูล role ของ officer จาก UserRole และ Role
-    const userRoleSql = knex('UserRole')
-      .join('Role', 'UserRole.role_id', 'Role.id')
-      .select('Role.id as role_id', 'Role.name as role_name')
-      .where('UserRole.user_id', req.params.id)
-      .toString();
+  Promise.all([
+    db2.query(sqlOfficer, { type: 'SELECT', plain: true }),
+    db.query(sqlOfficerUserRole, { type: 'SELECT' }),
+    db.query(sqlRoles, { type: 'SELECT' })
+  ])
+  .then(([officer, officerUserRoles, roles]) => {
+    res.send({ officer, officerUserRoles, roles });
+  })
+  .catch(next);
+}
 
-    const roles = await db.query(userRoleSql, { type: db.QueryTypes.SELECT });
-
-    // ดึงรายการ Role ทั้งหมดเพื่อให้เลือก
-    const allRolesSql = knex('Role')
-      .select('id', 'name')
-      .toString();
-
-    const allRoles = await db.query(allRolesSql, { type: db.QueryTypes.SELECT });
-
-    res.send({ officer, roles, allRoles });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ฟังก์ชัน edit เพื่อแก้ไข role ของ officer โดยไม่แก้ไขข้อมูลอื่น
 exports.edit = async (req, res, next) => {
   try {
-    const { role_id } = req.body;
+    const officerId = req.params.id
+    const { role_id } = req.body
 
-    // ตรวจสอบว่า officer มีอยู่จริงหรือไม่
-    const officerSql = knex2('officer')
-      .select('officer_id')
-      .where('officer_id', req.params.id)
-      .toString();
+    // ลบ roles ปัจจุบันของ officer
+    await UserRole.destroy({ where: { user_id: officerId } })
 
-    const officer = await db2.query(officerSql, { type: db2.QueryTypes.SELECT, plain: true });
-
-    if (!officer) {
-      return res.status(404).send({ message: 'Officer not found' });
-    }
-
-    // ลบ role เดิมของ officer ที่มีใน UserRole
-    await UserRole.destroy({ where: { user_id: req.params.id } });
-
-    // เพิ่ม role ใหม่ตาม role_id ที่ส่งมา
+    // เพิ่ม roles ใหม่ตามที่เลือก
     if (role_id && Array.isArray(role_id)) {
-      await UserRole.bulkCreate(
-        role_id.map(role => ({
-          user_id: req.params.id,
-          role_id: role
-        }))
-      );
+      const newRoles = role_id.map(roleId => ({
+        user_id: officerId,
+        role_id: roleId
+      }))
+      await UserRole.bulkCreate(newRoles)
     }
 
-    res.send({ message: 'Roles updated successfully' });
-  } catch (error) {
-    next(error);
+    res.status(200).send({ message: 'Roles updated successfully.' })
+  } catch (err) {
+    next(err)
   }
 };

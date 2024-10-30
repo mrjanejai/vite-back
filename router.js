@@ -38,10 +38,10 @@ router
 );
   
 router
-  .use('/hosxpOfficer', authorize('ADMIN'), express.Router()
+  .use('/hosxpOfficers', authorize('ADMIN'), express.Router()
     .get('/', hosxpOfficer.index)
     .get('/:id', hosxpOfficer.get)
-    .get('/:id/edit',hosxpOfficer.edit)
+    .get('/edit/:id',hosxpOfficer.edit)
   );
 
 router
