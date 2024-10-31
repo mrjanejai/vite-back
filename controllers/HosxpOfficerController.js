@@ -95,25 +95,47 @@ exports.get = (req, res, next) => {
   .catch(next);
 }
 
-exports.edit = async (req, res, next) => {
-  try {
-    const officerId = req.params.id
-    const { role_id } = req.body
-
-    // ลบ roles ปัจจุบันของ officer
-    await UserRole.destroy({ where: { user_id: officerId } })
-
-    // เพิ่ม roles ใหม่ตามที่เลือก
-    if (role_id && Array.isArray(role_id)) {
-      const newRoles = role_id.map(roleId => ({
-        user_id: officerId,
-        role_id: roleId
-      }))
-      await UserRole.bulkCreate(newRoles)
-    }
-
-    res.status(200).send({ message: 'Roles updated successfully.' })
-  } catch (err) {
-    next(err)
-  }
+exports.edit = (req, res, next) => {
+  console.log('im in edit hosxp',req.params.id);
+  let sqlOfficer = knex2('officer')
+    .select('officer.officer_id', 'officer.officer_name', 'officer.officer_login_name')
+    .where('officer.officer_id', req.params.id)
+    .toString();
+  let sqlOfficerUserRole = knex('UserRole')
+    .join('Role', 'UserRole.role_id', 'Role.id')
+    .select('Role.id as role_id', 'Role.name as role_name')
+    .where('UserRole.user_id', req.params.id) // ใช้ officer_id เป็น user_id ในกรณีนี้
+    .toString();
+  let sqlRole = knex('Role')
+    .select('Role.id', 'Role.name')
+    .toString()
+  Promise.all([
+    db2.query(sqlOfficer, { type: 'SELECT', plain: true }),
+    db.query(sqlOfficerUserRole, { type: 'SELECT' }),
+    db.query(sqlRole, { type: 'SELECT' })
+  ]).then(([ officer, officerUserRoles, roles ]) => {
+    res.send({ officer, officerUserRoles, roles })
+  }).catch(next)
+}
+  
+  exports.update = (req, res, next) => {
+    let officer = util.parseData(HosxpOfficer, { ...req.body })
+    
+  HosxpOfficer.update(officer, { where: { id: req.params.id }}).then(async () => {
+  await (async() => {
+      await UserRole.destroy({ where: { officer_id: req.params.id }})
+      let roles = req.body.role_id
+      if (roles) {
+        await UserRole.bulkCreate(
+          roles.map(role => {
+            return {
+              user_id: req.params.id,
+              role_id: role
+            }
+          })
+        )
+      }
+    })()
+    res.end()
+  }).catch(next)
 };

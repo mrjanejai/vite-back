@@ -73,6 +73,7 @@ exports.create = (req, res, next) => {
 }
 
 exports.get = (req, res, next) => {
+  console.log('im in get useraccout')
   let sqlUserAccount = knex('UserAccount')
     .select('UserAccount.id', 'UserAccount.name', 'UserAccount.email', 'UserAccount.active')
     .where('UserAccount.id', req.params.id)
@@ -86,12 +87,13 @@ exports.get = (req, res, next) => {
   Promise.all([
     db.query(sqlUserAccount, { type: 'SELECT', plain: true }),
     db.query(sqlUserAccountUserRole, { type: 'SELECT' })
-  ]).then(([ userAccount, userAccountUserRoles ]) => {
+  ]).then(([userAccount, userAccountUserRoles]) => {
     res.send({ userAccount, userAccountUserRoles })
   }).catch(next)
 }
 
 exports.edit = (req, res, next) => {
+  console.log('im in edit put');
   let sqlUserAccount = knex('UserAccount')
     .select('UserAccount.id', 'UserAccount.name', 'UserAccount.email', 'UserAccount.active')
     .where('UserAccount.id', req.params.id)

@@ -41,7 +41,7 @@ router
   .use('/hosxpOfficers', authorize('ADMIN'), express.Router()
     .get('/', hosxpOfficer.index)
     .get('/:id', hosxpOfficer.get)
-    .get('/edit/:id',hosxpOfficer.edit)
+    .get('/:id/edit',hosxpOfficer.edit)
   );
 
 router
