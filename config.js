@@ -58,7 +58,8 @@ module.exports = {
     { title: 'Product', path: 'product', roles: 'ADMIN', show: true },
     { title: 'User Account', path: 'userAccount', roles: 'ADMIN', show: true },
     { title: 'Hosxp Account', path: 'hosxpOfficer', roles: 'ADMIN', show: true },
-    { title: 'HOSXP', path: 'hosxp', roles: 'ADMIN,USER', show: true }
+    { title: 'HOSXP', path: 'hosxp', roles: 'ADMIN,USER', show: true },
+    { title: 'OPD Confirm', path: 'opdConfirm', roles: 'ADMIN,AUDITOR', show: true }
   ],
   jwtSecret: '@SDPY@15012@MIS@2024'
 }

@@ -11,6 +11,7 @@ const orderDetail = require('./controllers/OrderDetailController.js');
 const hosxp = require('./controllers/HosxpController.js');
 const patient = require('./controllers/PatientController.js');
 const hosxpOfficer = require('./controllers/HosxpOfficerController.js');
+const opdConfirm = require('./controllers/OpdConfirmController.js');
 
 const router = express.Router();
 
@@ -42,6 +43,12 @@ router
     .get('/', hosxpOfficer.index)
     .get('/:id', hosxpOfficer.get)
     .get('/:id/edit',hosxpOfficer.edit)
+);
+
+router
+  .use('/opdConfirm', authorize('ADMIN','AUDITOR'), express.Router()
+    .get('/', opdConfirm.index)
+    .get('/population-data', opdConfirm.getPopulationData) // Added new endpoint
   );
 
 router
