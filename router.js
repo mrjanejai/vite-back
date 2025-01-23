@@ -12,6 +12,11 @@ const hosxp = require('./controllers/HosxpController.js');
 const patient = require('./controllers/PatientController.js');
 const hosxpOfficer = require('./controllers/HosxpOfficerController.js');
 const opdConfirm = require('./controllers/OpdConfirmController.js');
+const maDepartment = require('./controllers/MaDepartmentController.js')
+const maProvider = require('./controllers/MaProviderController.js')
+const maStatusType = require('./controllers/MaStatusTypeController.js')
+const maType = require('./controllers/MaTypeController.js')
+const ma = require('./controllers/MaController.js')
 
 const router = express.Router();
 
@@ -110,5 +115,60 @@ router
     .get('/population-nat', patient.getPopulationNationality) // Added new endpoint
     .get('/population-status', patient.getPopulationStatus) // Added new endpoint
     .get('/population-occ', patient.getPopulationOcc) // Added new endpoint
+);
+router
+    .use('/maDepartments', authorize('ADMIN'), express.Router()
+      .get('/', maDepartment.index)
+      .post('/', maDepartment.create)
+      .get('/create', maDepartment.getCreate)
+      .get('/:id', maDepartment.get)
+      .get('/:id/edit', maDepartment.edit)
+      .put('/:id', maDepartment.update)
+      .get('/:id/delete', maDepartment.getDelete)
+      .delete('/:id', maDepartment.delete)
+);
+    router
+  .use('/maProviders', authorize('ADMIN'), express.Router()
+    .get('/', maProvider.index)
+    .post('/', maProvider.create)
+    .get('/create', maProvider.getCreate)
+    .get('/:id', maProvider.get)
+    .get('/:id/edit', maProvider.edit)
+    .put('/:id', maProvider.update)
+    .get('/:id/delete', maProvider.getDelete)
+    .delete('/:id', maProvider.delete)
+);
+  router
+  .use('/maStatusTypes', authorize('ADMIN'), express.Router()
+    .get('/', maStatusType.index)
+    .post('/', maStatusType.create)
+    .get('/create', maStatusType.getCreate)
+    .get('/:id', maStatusType.get)
+    .get('/:id/edit', maStatusType.edit)
+    .put('/:id', maStatusType.update)
+    .get('/:id/delete', maStatusType.getDelete)
+    .delete('/:id', maStatusType.delete)
+);
+  router
+  .use('/maTypes', authorize('ADMIN'), express.Router()
+    .get('/', maType.index)
+    .post('/', maType.create)
+    .get('/create', maType.getCreate)
+    .get('/:id', maType.get)
+    .get('/:id/edit', maType.edit)
+    .put('/:id', maType.update)
+    .get('/:id/delete', maType.getDelete)
+    .delete('/:id', maType.delete)
+);
+  router
+  .use('/mas', authorize('ADMIN,USER'), express.Router()
+    .get('/', ma.index)
+    .post('/', ma.create)
+    .get('/create', ma.getCreate)
+    .get('/:id', ma.get)
+    .get('/:id/edit', ma.edit)
+    .put('/:id', ma.update)
+    .get('/:id/delete', ma.getDelete)
+    .delete('/:id', ma.delete)
   );
 module.exports = router;

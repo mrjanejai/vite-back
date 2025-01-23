@@ -15,10 +15,10 @@ module.exports = {
     reset: 'Dear User,\n\nYou recently requested to reset the password for your {app_name} account. Please click the link below to proceed.\n{app_url}/#/changePassword/{token}\n\nBest Regards,\nAdministrator'
   },
   db: {
-    host: '10.0.0.7',
+    host: '10.0.0.3',
     port: 3306,
-    user: 'sa',
-    password: 'sa',
+    user: 'root',
+    password: '@Wch123456',
     database: 'pjdb',
     dialect: 'mysql'
   },
@@ -59,7 +59,12 @@ module.exports = {
     { title: 'User Account', path: 'userAccount', roles: 'ADMIN', show: true },
     { title: 'Hosxp Account', path: 'hosxpOfficer', roles: 'ADMIN', show: true },
     { title: 'HOSXP', path: 'hosxp', roles: 'ADMIN,USER', show: true },
-    { title: 'OPD Confirm', path: 'opdConfirm', roles: 'ADMIN,AUDITOR', show: true }
+    { title: 'OPD Confirm', path: 'opdConfirm', roles: 'ADMIN,AUDITOR', show: true },
+    { title: 'แจ้งซ่อม IT', path: 'ma', roles: 'ADMIN,USER', show: true },
+    { title: 'Ma Department', path: 'maDepartment', roles: 'ADMIN', show: true },
+    { title: 'Ma Provider', path: 'maProvider', roles: 'ADMIN', show: true },
+    { title: 'Ma Status Type', path: 'maStatusType', roles: 'ADMIN', show: true },
+    { title: 'Ma Type', path: 'maType', roles: 'ADMIN', show: true },
   ],
   jwtSecret: '@SDPY@15012@MIS@2024'
 }
