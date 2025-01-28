@@ -6,10 +6,10 @@ exports.index = (req, res, next) => {
   let page = req.query.page || 1
   let size = req.query.size || 10
   let sort = req.query.sort || 'Ma.id'
-  let sortDirection = req.query.sort ? (req.query.desc ? 'desc' : 'asc') : 'asc'
+  let sortDirection = req.query.sort ? (req.query.desc ? 'desc' : 'asc') : 'desc'
   let column = req.query.sc
   let query = knex('Ma')
-    .select('Ma.id', 'Ma.ma_topic', 'Ma.hw_id', 'Ma.ma_detail', 'Ma.report_by', 'Ma.report_date', 'Ma.resolve_date', 'Ma.resolve_detail', 'Ma.file_attch', 'Ma.start_job_date', 'MaType.sla_name as ma_type_sla_name', 'MaDepartment.department as ma_department_department', 'MaStatusType.status_name as ma_status_type_status_name', 'MaProvider.provider_name as ma_provider_provider_name')
+    .select('Ma.id', 'Ma.ma_topic', 'Ma.hw_id', 'Ma.ma_detail', 'Ma.report_by', 'Ma.report_date', 'Ma.resolve_date', 'Ma.resolve_detail', 'Ma.file_attch', 'Ma.start_job_date', 'MaType.sla_name as ma_type_sla_name', 'MaDepartment.department as ma_department_department', 'MaStatusType.id as ma_status_type_id', 'MaStatusType.status_name as ma_status_type_status_name', 'MaProvider.provider_name as ma_provider_provider_name')
     .leftJoin('MaType', 'Ma.ma_type', 'MaType.id')
     .leftJoin('MaDepartment', 'Ma.department', 'MaDepartment.id')
     .leftJoin('MaStatusType', 'Ma.status_type', 'MaStatusType.id')
